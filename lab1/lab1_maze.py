@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from IPython import display
+import random
 
 # Implemented methods
 methods = ['DynProg', 'ValIter']
@@ -36,12 +37,14 @@ class Maze:
     STEP_REWARD = -1
     GOAL_REWARD = 0
     IMPOSSIBLE_REWARD = -100
+    EATEN_REWARD = -100
 
     def __init__(self, maze, weights=None, random_rewards=False):
         """ Constructor of the environment Maze.
         """
         self.maze = maze
         self.actions = self.__actions()
+        self.actions_minotaur = self.__actions_minotaur()
         self.states, self.map = self.__states()
         self.n_actions = len(self.actions)
         self.n_states = len(self.states)
@@ -58,6 +61,14 @@ class Maze:
         actions[self.MOVE_DOWN] = (1, 0)
         return actions
 
+    def __actions_minotaur(self):
+        actions = dict()
+        actions[self.MOVE_LEFT] = (0, -1)
+        actions[self.MOVE_RIGHT] = (0, 1)
+        actions[self.MOVE_UP] = (-1, 0)
+        actions[self.MOVE_DOWN] = (1, 0)
+        return actions
+
     def __states(self):
         states = dict()
         map = dict()
@@ -65,10 +76,12 @@ class Maze:
         s = 0
         for i in range(self.maze.shape[0]):
             for j in range(self.maze.shape[1]):
-                if self.maze[i, j] != 1:
-                    states[s] = (i, j)
-                    map[(i, j)] = s
-                    s += 1
+                for k in range(self.maze.shape[0]):
+                    for l in range(self.maze.shape[1]):
+                        if self.maze[i, j] != 1:
+                            states[s] = (i, j, k, l)
+                            map[(i, j, k, l)] = s
+                            s += 1
         return states, map
 
     def __move(self, state, action):
@@ -88,7 +101,29 @@ class Maze:
         if hitting_maze_walls:
             return state
         else:
-            return self.map[(row, col)]
+            return self.map[(row, col, self.states[state][2], self.states[state][3])]
+
+    def __move_minotaur(self, state):
+        """ Makes a step in the maze, given a current position.
+            The
+
+            :return tuple next_cell: Position (x,y) on the maze that agent transitions to.
+        """
+
+        action = random.randint(0, 3)
+
+        # Compute the future position given current (state, action)
+        debug_states = self.states[state]
+        row = self.states[state][2] + self.actions_minotaur[action][1]
+        col = self.states[state][3] + self.actions_minotaur[action][2]
+        # Is the future position an impossible one ?
+        hitting_maze_walls = (row == -1) or (row == 7) or \
+                             (col == -1) or (col == 8)
+        # Based on the impossiblity check return the next state.
+        if hitting_maze_walls:
+            return state
+        else:
+            return self.map[(self.states[state][0], self.states[state][1], row, col)]
 
     def __transitions(self):
         """ Computes the transition probabilities for every state action pair.
@@ -120,21 +155,15 @@ class Maze:
                     if s == next_s and a != self.STAY:
                         rewards[s, a] = self.IMPOSSIBLE_REWARD
                     # Reward for reaching the exit
-                    elif s == next_s and self.maze[self.states[next_s]] == 2:
+                    elif s == next_s and self.maze[self.states[next_s][0:2]] == 2:
                         rewards[s, a] = self.GOAL_REWARD
                     # Reward for taking a step to an empty cell that is not the exit
+                    elif s == next_s and self.states[s][0] == self.states[s][2] and \
+                            self.states[s][1] == self.states[s][3]:
+                        rewards[s, a] = self.EATEN_REWARD
                     else:
                         rewards[s, a] = self.STEP_REWARD
 
-                    # If there exists trapped cells with probability 0.5
-                    if random_rewards and self.maze[self.states[next_s]] < 0:
-                        row, col = self.states[next_s]
-                        # With probability 0.5 the reward is
-                        r1 = (1 + abs(self.maze[row, col])) * rewards[s, a]
-                        # With probability 0.5 the reward is
-                        r2 = rewards[s, a]
-                        # The average reward
-                        rewards[s, a] = 0.5 * r1 + 0.5 * r2
         # If the weights are descrobed by a weight matrix
         else:
             for s in range(self.n_states):
@@ -162,6 +191,7 @@ class Maze:
             path.append(start)
             while t < horizon - 1:
                 # Move to next state given the policy and the current state
+                s = self.__move_minotaur(s)
                 next_s = self.__move(s, policy[s, t])
                 # Add the position in the maze corresponding to the next state
                 # to the path
@@ -347,7 +377,7 @@ def draw_maze(maze):
 
 def animate_solution(maze, path):
     # Map a color to each cell in the maze
-    col_map = {0: WHITE, 1: BLACK, 2: LIGHT_GREEN, -6: LIGHT_RED, -1: LIGHT_RED}
+    col_map = {0: WHITE, 1: BLACK, 2: LIGHT_GREEN, -6: LIGHT_PURPLE, -1: LIGHT_RED}
 
     # Size of the maze
     rows, cols = maze.shape
@@ -382,15 +412,26 @@ def animate_solution(maze, path):
 
     # Update the color at each frame
     for i in range(len(path)):
-        grid.get_celld()[(path[i])].set_facecolor(LIGHT_ORANGE)
-        grid.get_celld()[(path[i])].get_text().set_text('Player')
+        debug_get_celld = grid.get_celld()
+        debug_path_i = path[i][0:2]
+        debug_path_i_minus_1 = path[i-1][0:2]
+
+        debug_path_i_minotaur = path[i][2:4]
+        debug_path_i_minus_1_minotaur = path[i - 1][2:4]
+
+        debug_get_celld[debug_path_i].set_facecolor(LIGHT_ORANGE)
+        grid.get_celld()[debug_path_i].get_text().set_text('Player')
+
+        debug_get_celld[debug_path_i_minotaur].set_facecolor(LIGHT_RED)
+        grid.get_celld()[debug_path_i_minotaur].get_text().set_text('DEATH')
         if i > 0:
             if path[i] == path[i - 1]:
-                grid.get_celld()[(path[i])].set_facecolor(LIGHT_GREEN)
-                grid.get_celld()[(path[i])].get_text().set_text('Player is out')
+                grid.get_celld()[debug_path_i].set_facecolor(LIGHT_GREEN)
+                grid.get_celld()[debug_path_i].get_text().set_text('Player is out')
             else:
-                grid.get_celld()[(path[i - 1])].set_facecolor(col_map[maze[path[i - 1]]])
-                grid.get_celld()[(path[i - 1])].get_text().set_text('')
+                debug_maze = maze[debug_path_i_minus_1]
+                grid.get_celld()[debug_path_i_minus_1].set_facecolor(col_map[debug_maze])
+                grid.get_celld()[debug_path_i_minus_1].get_text().set_text('')
         display.display(fig)
         display.clear_output(wait=True)
         time.sleep(1)

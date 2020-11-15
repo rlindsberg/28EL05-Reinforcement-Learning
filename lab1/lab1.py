@@ -25,7 +25,7 @@ V, policy = mz.dynamic_programming(env, horizon)
 
 # Simulate the shortest path starting from position A
 method = 'DynProg'
-start  = (0, 0)
+start  = (0, 0, 6, 5)
 path = env.simulate(start, policy, method)
 
 # Show the shortest path
