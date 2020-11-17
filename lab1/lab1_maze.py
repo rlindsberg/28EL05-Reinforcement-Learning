@@ -37,7 +37,7 @@ class Maze:
     STEP_REWARD = -1
     GOAL_REWARD = 0
     IMPOSSIBLE_REWARD = -100
-    EATEN_REWARD = -100
+    EATEN_REWARD = -1000
 
     def __init__(self, maze, weights=None, random_rewards=False):
         """ Constructor of the environment Maze.
@@ -415,25 +415,31 @@ def animate_solution(maze, path):
     # Update the color at each frame
     for i in range(len(path)):
         debug_get_celld = grid.get_celld()
-        debug_path_i = path[i][0:2]
-        debug_path_i_minus_1 = path[i-1][0:2]
+        player_coord = path[i][0:2]
+        player_coord_last_timestep = path[i-1][0:2]
 
-        debug_path_i_minotaur = path[i][2:4]
-        debug_path_i_minus_1_minotaur = path[i - 1][2:4]
+        minotaur_coord = path[i][2:4]
+        minotaur_coord_last_timestep = path[i - 1][2:4]
 
-        debug_get_celld[debug_path_i].set_facecolor(LIGHT_ORANGE)
-        grid.get_celld()[debug_path_i].get_text().set_text('Player')
+        debug_get_celld[player_coord].set_facecolor(LIGHT_ORANGE)
+        grid.get_celld()[player_coord].get_text().set_text('Player')
 
-        debug_get_celld[debug_path_i_minotaur].set_facecolor(LIGHT_RED)
-        grid.get_celld()[debug_path_i_minotaur].get_text().set_text('DEATH')
+        debug_get_celld[minotaur_coord].set_facecolor(LIGHT_RED)
+        grid.get_celld()[minotaur_coord].get_text().set_text('DEATH')
         if i > 0:
-            if path[i] == path[i - 1]:
-                grid.get_celld()[debug_path_i].set_facecolor(LIGHT_GREEN)
-                grid.get_celld()[debug_path_i].get_text().set_text('Player is out')
+            if player_coord == (6, 5):
+                grid.get_celld()[player_coord].set_facecolor(LIGHT_GREEN)
+                grid.get_celld()[player_coord].get_text().set_text('Player is out')
+                break
             else:
-                debug_maze = maze[debug_path_i_minus_1]
-                grid.get_celld()[debug_path_i_minus_1].set_facecolor(col_map[debug_maze])
-                grid.get_celld()[debug_path_i_minus_1].get_text().set_text('')
+                debug_maze = maze[player_coord_last_timestep]
+                debug_maze_minotaur = maze[minotaur_coord_last_timestep]
+                if player_coord_last_timestep != minotaur_coord:
+                    grid.get_celld()[player_coord_last_timestep].set_facecolor(col_map[debug_maze])
+                    grid.get_celld()[player_coord_last_timestep].get_text().set_text('')
+                if minotaur_coord_last_timestep != minotaur_coord:
+                    grid.get_celld()[minotaur_coord_last_timestep].set_facecolor(col_map[debug_maze_minotaur])
+                    grid.get_celld()[minotaur_coord_last_timestep].get_text().set_text('')
         display.display(fig)
         display.clear_output(wait=True)
         time.sleep(1)
