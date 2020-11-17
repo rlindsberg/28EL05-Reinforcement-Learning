@@ -110,12 +110,14 @@ class Maze:
             :return tuple next_cell: Position (x,y) on the maze that agent transitions to.
         """
 
-        action = random.randint(0, 3)
+        action = random.randint(1, 4)
 
         # Compute the future position given current (state, action)
-        debug_states = self.states[state]
-        row = self.states[state][2] + self.actions_minotaur[action][1]
-        col = self.states[state][3] + self.actions_minotaur[action][2]
+        debug_states = self.states
+        debug_states_states = self.states[state]
+        debug_minotaur_action = self.actions_minotaur
+        row = self.states[state][2] + self.actions_minotaur[action][0]
+        col = self.states[state][3] + self.actions_minotaur[action][1]
         # Is the future position an impossible one ?
         hitting_maze_walls = (row == -1) or (row == 7) or \
                              (col == -1) or (col == 8)
