@@ -194,10 +194,19 @@ class Maze:
             while t < horizon - 1:
                 # Move to next state given the policy and the current state
                 s = self.__move_minotaur(s)
+
+                if self.states[s][0] == self.states[s][2] and self.states[s][1] == self.states[s][3]:
+                    print("Eaten!")
+                    return path
+
                 next_s = self.__move(s, policy[s, t])
                 # Add the position in the maze corresponding to the next state
                 # to the path
                 path.append(self.states[next_s])
+
+                if self.states[next_s][0] == self.states[next_s][2] and self.states[next_s][1] == self.states[next_s][3]:
+                    print("Eaten!")
+                    return path
                 # Update time and state for next iteration
                 t += 1
                 s = next_s
