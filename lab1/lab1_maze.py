@@ -63,6 +63,7 @@ class Maze:
 
     def __actions_minotaur(self):
         actions = dict()
+        actions[self.STAY] = (0, 0)
         actions[self.MOVE_LEFT] = (0, -1)
         actions[self.MOVE_RIGHT] = (0, 1)
         actions[self.MOVE_UP] = (-1, 0)
@@ -109,13 +110,22 @@ class Maze:
 
             :return tuple next_cell: Position (x,y) on the maze that agent transitions to.
         """
+        #minotaur can stand still
+        action = random.randint(1, 5)
 
-        action = random.randint(1, 4)
+        #minotaur cant stand still
+        #action = random.randint(1, 4)
 
         # Compute the future position given current (state, action)
         debug_states = self.states
         debug_states_states = self.states[state]
         debug_minotaur_action = self.actions_minotaur
+       # print(action)
+       # print(self.actions_minotaur[action][0])
+       # print(self.actions_minotaur[action][1])
+        print(self.actions_minotaur[4])
+        print(action)
+        print(self.actions_minotaur[5])
         row = self.states[state][2] + self.actions_minotaur[action][0]
         col = self.states[state][3] + self.actions_minotaur[action][1]
         # Is the future position an impossible one ?
@@ -210,6 +220,8 @@ class Maze:
                 # Update time and state for next iteration
                 t += 1
                 s = next_s
+                if t == (horizon-1) and self.states[s][0:2] != (6, 5):
+                    print('Out of time')
         if method == 'ValIter':
             # Initialize current state, next state and time
             t = 1
@@ -452,6 +464,6 @@ def animate_solution(maze, path):
         grid.get_celld()[minotaur_coord].get_text().set_text('DEATH')
 
         display.display(fig)
-        plt.savefig("ba" + str(i) + ".png")
+        #plt.savefig("ba" + str(i) + ".png")
         display.clear_output(wait=True)
         time.sleep(1)
