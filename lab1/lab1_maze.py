@@ -111,7 +111,7 @@ class Maze:
             :return tuple next_cell: Position (x,y) on the maze that agent transitions to.
         """
         #minotaur can stand still
-        action = random.randint(1, 5)
+        action = random.randint(0, 4)
 
         #minotaur cant stand still
         #action = random.randint(1, 4)
@@ -123,9 +123,9 @@ class Maze:
        # print(action)
        # print(self.actions_minotaur[action][0])
        # print(self.actions_minotaur[action][1])
-        print(self.actions_minotaur[4])
-        print(action)
-        print(self.actions_minotaur[5])
+        #print(self.actions_minotaur[4])
+        #print(action)
+        #print(self.actions_minotaur[5])
         row = self.states[state][2] + self.actions_minotaur[action][0]
         col = self.states[state][3] + self.actions_minotaur[action][1]
         # Is the future position an impossible one ?
