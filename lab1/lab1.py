@@ -18,7 +18,7 @@ numfinishmaze = 0
 env = mz.Maze(maze)
 
 # Finite horizon
-horizon = 20
+horizon = np.random.geometric(p=1/30)
 # Solve the MDP problem with dynamic programming
 V, policy = mz.dynamic_programming(env, horizon)
 for i in range(100):
