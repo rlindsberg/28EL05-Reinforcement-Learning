@@ -103,6 +103,7 @@ class Maze:
         else:
             return self.map[(row, col, self.states[state][2], self.states[state][3])]
 
+
     def __move_police(self, state):
         """ Makes a step in the maze, given a current position.
             The
@@ -112,42 +113,42 @@ class Maze:
 
         #if same column as robber
         if (self.states[state][2] == self.states[state][0]) and (self.states[state][3] > self.states[state][1]):
-            print("go up down or left")
+            #print("go up down or left")
             actioncandidates = [1, 3, 4] #go up down or left
             actionindex = random.randint(0,2)
             action = actioncandidates[actionindex]
         elif (self.states[state][2] == self.states[state][0]) and (self.states[state][3] < self.states[state][1]):
-            print("go up down or right")
+            #print("go up down or right")
             actioncandidates = [2, 3, 4] #go up down or right
             actionindex = random.randint(0,2)
             action = actioncandidates[actionindex]
         elif (self.states[state][3] == self.states[state][1]) and (self.states[state][2] < self.states[state][0]):
-            print("go left right or down")
+            #print("go left right or down")
             actioncandidates = [1, 2, 4] #go left right or down
             actionindex = random.randint(0,2)
             action = actioncandidates[actionindex]
         elif (self.states[state][3] == self.states[state][1]) and (self.states[state][2] > self.states[state][0]):
-            print("go left right or up")
+            #print("go left right or up")
             actioncandidates = [1, 2, 3] #go left right or up
             actionindex = random.randint(0,2)
             action = actioncandidates[actionindex]
         elif (self.states[state][3] > self.states[state][1]) and (self.states[state][2] < self.states[state][0]):
-            print("go left or down")
+            #print("go left or down")
             actioncandidates = [1, 4] #left or down
             actionindex = random.randint(0,1)
             action = actioncandidates[actionindex]
-        elif (self.states[state][3] < self.states[state][1]) and (self.states[state][2] > self.states[state][0]):
-            print("go right or down")
+        elif (self.states[state][3] < self.states[state][1]) and (self.states[state][2] < self.states[state][0]):
+            #print("go right or down")
             actioncandidates = [2, 4] #go right or down
             actionindex = random.randint(0,1)
             action = actioncandidates[actionindex]
         elif (self.states[state][3] > self.states[state][1]) and (self.states[state][2] > self.states[state][0]):
-            print("go left or up")
+            #print("go left or up")
             actioncandidates = [1, 3] #go left or up
             actionindex = random.randint(0,1)
             action = actioncandidates[actionindex]
-        elif (self.states[state][3] < self.states[state][1]) and (self.states[state][2] < self.states[state][0]):
-            print("go right or up")
+        elif (self.states[state][3] < self.states[state][1]) and (self.states[state][2] > self.states[state][0]):
+            #print("go right or up")
             actioncandidates = [2, 3] #go right or up
             actionindex = random.randint(0,1)
             action = actioncandidates[actionindex]
@@ -181,6 +182,7 @@ class Maze:
         else:
             return self.map[(self.states[state][0], self.states[state][1], row, col)]
 
+
     def __transitions(self):
         """ Computes the transition probabilities for every state action pair.
             :return numpy.tensor transition probabilities: tensor of transition
@@ -207,20 +209,35 @@ class Maze:
             for s in range(self.n_states):
                 for a in range(self.n_actions):
                     next_s = self.__move(s, a)
-                    # Rewrd for hitting a wall
+                    # Reward for hitting a wall
                     if s == next_s and a != self.STAY:
                         rewards[s, a] = self.IMPOSSIBLE_REWARD
-                    # Reward for reaching the exit
+                    # Reward for robbing a bank
                     elif s == next_s and self.maze[self.states[next_s][0:2]] == 1:
                         rewards[s, a] = self.BANK_REWARD
-                    # Reward for taking a step to an empty cell that is not the exit
+                    # Reward for getting caught
                     elif self.states[s][0] == self.states[s][2] and \
                             self.states[s][1] == self.states[s][3]:
+                        rewards[s, a] = self.CAUGHT_REWARD
+                    elif self.states[next_s][0] == self.states[next_s][2] and \
+                            self.states[next_s][1] == self.states[next_s][3]:
                         rewards[s, a] = self.CAUGHT_REWARD
                     else:
                         rewards[s, a] = self.STEP_REWARD
 
-        # If the weights are descrobed by a weight matrix
+                    #Add penalty reward if the selected action causes the robber to be neighbour with the police
+                    if self.states[next_s][0] == self.states[next_s][2] and self.states[next_s][1] == self.states[next_s][3]-1:
+                        rewards[s, a] -= 50/3
+                    if self.states[next_s][0] == self.states[next_s][2] and self.states[next_s][1] == self.states[next_s][3]+1:
+                        rewards[s, a] -= 50/3
+                    if self.states[next_s][0] == self.states[next_s][2]-1 and self.states[next_s][1] == self.states[next_s][3]:
+                        rewards[s, a] -= 50/3
+                    if self.states[next_s][0] == self.states[next_s][2]+1 and self.states[next_s][1] == self.states[next_s][3]:
+                        rewards[s, a] -= 50/3
+
+
+
+        # If the weights are described by a weight matrix
         else:
             for s in range(self.n_states):
                 for a in range(self.n_actions):
@@ -231,7 +248,7 @@ class Maze:
 
         return rewards
 
-    def simulate(self, start, policy, method):
+    def simulate(self, start, policy, method, horizon):
         if method not in methods:
             error = 'ERROR: the argument method must be in {}'.format(methods)
             raise NameError(error)
@@ -274,15 +291,17 @@ class Maze:
             # Add the position in the maze corresponding to the next state
             # to the path
             # Loop while state is not the goal state
-            while t < 20:
+            while t < horizon:
                 # Update state
                 # Move to next state given the policy and the current state
-                print(t)
-                print(self.states[s])
+                #print(t)
+                #print(self.states[s])
                 s = self.__move_police(s)
-                print(self.states[s])
+                #print(self.states[s])
+                #print(s)
+                #print(policy[s])
                 s = self.__move(s, policy[s])
-                print(self.states[s])
+                #print(self.states[s])
                 # Add the position in the maze corresponding to the next state
                 # to the path
                 path.append(self.states[s])
@@ -299,7 +318,6 @@ class Maze:
         print(self.map)
         print('The rewards:')
         print(self.rewards)
-
 
 def dynamic_programming(env, horizon):
     """ Solves the shortest path problem using dynamic programming
@@ -348,7 +366,6 @@ def dynamic_programming(env, horizon):
         policy[:, t] = np.argmax(Q, 1)
     return V, policy
 
-
 def value_iteration(env, gamma, epsilon):
     """ Solves the shortest path problem using value iteration
         :input Maze env           : The maze environment in which we seek to
@@ -387,17 +404,19 @@ def value_iteration(env, gamma, epsilon):
     BV = np.max(Q, 1)
 
     # Iterate until convergence
-    while np.linalg.norm(V - BV) >= tol and n < 200:
+    while np.linalg.norm(V - BV) >= tol and n < 1000:
         # Increment by one the numbers of iteration
         n += 1
-        print("Iterating n")
-        print(n)
+        #print("Iterating n")
+        #print(n)
         # Update the value function
         V = np.copy(BV)
         # Compute the new BV
-        for s in range(n_states):
+        for state in range(n_states):
+            #neighbours = police_neighbours(state)
             for a in range(n_actions):
-                Q[s, a] = r[s, a] + gamma * np.dot(p[:, s, a], V)
+                Q[state, a] = r[state, a] + gamma * np.dot(p[:, state, a], V)
+
         BV = np.max(Q, 1)
         # Show error
         # print(np.linalg.norm(V - BV))
@@ -511,3 +530,4 @@ def animate_solution(maze, path):
         plt.savefig("ba" + str(i) + ".png")
         display.clear_output(wait=True)
         time.sleep(1)
+
