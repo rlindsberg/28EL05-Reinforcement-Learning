@@ -16,6 +16,7 @@
 # Load packages
 import numpy as np
 
+
 class Agent(object):
     ''' Base agent class, used as a parent class
 
@@ -26,6 +27,7 @@ class Agent(object):
             n_actions (int): where we store the number of actions
             last_action (int): last action taken by the agent
     '''
+
     def __init__(self, n_actions: int):
         self.n_actions = n_actions
         self.last_action = None
@@ -41,6 +43,7 @@ class Agent(object):
 
 class RandomAgent(Agent):
     ''' Agent taking actions uniformly at random, child of the class Agent'''
+
     def __init__(self, n_actions: int):
         super(RandomAgent, self).__init__(n_actions)
 
