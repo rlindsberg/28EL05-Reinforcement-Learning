@@ -14,6 +14,8 @@
 #
 
 # Load packages
+import random
+
 import numpy as np
 import torch
 from torch import optim
@@ -30,7 +32,7 @@ def soft_update(local_model, target_model, tau):
 
 class QAgent:
     def __init__(self, state_size, action_size):
-        self.seed = 0
+        self.seed = random.seed(0)
         self.t = 0
         self.state_size = state_size
         self.action_size = action_size
@@ -46,18 +48,21 @@ class QAgent:
         self.replay_buffer.add_experience(state, action, reward, next_state, done)
 
     def learn_by_experience(self, gamma):
-        time_to_learn = self.t % 4
-        if time_to_learn:
-            if len(self.replay_buffer.double_ended_queue) > 15:
-                states, actions, rewards, next_states, dones = self.replay_buffer.get_experiences_tuple()
-                q_targets_next = self.q_network_target(next_states).detach().max(1)[0].unsqueeze()
-                q_targets = rewards + (gamma * q_targets_next * (1 - dones))
-                q_expected = self.q_network_local(states).gather(1, actions)
-                loss = F.mse_loss(q_expected, q_targets)
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-                soft_update(self.q_network_local, self.q_network_target, 0.01)
+        if len(self.replay_buffer.double_ended_queue) > 15:
+            experiences = self.replay_buffer.get_experiences_tuple()
+            states, actions, rewards, next_states, dones = experiences
+            q_targets_next = self.q_network_target(next_states).detach().max(1)[0].unsqueeze(1)
+            q_targets = rewards + (gamma * q_targets_next * (1 - dones))
+            q_expected = self.q_network_local(states).gather(1, actions)
+            loss = F.mse_loss(q_expected, q_targets)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+        self.t = (self.t + 1) % 175
+        if self.t == 0:
+            print("time to learn")
+            soft_update(self.q_network_local, self.q_network_target, 0.01)
 
     def take_action(self, state, epsilon):
         if epsilon < np.random.uniform(0, 1):

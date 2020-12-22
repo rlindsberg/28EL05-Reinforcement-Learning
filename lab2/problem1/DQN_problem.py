@@ -19,7 +19,7 @@ import gym
 import torch
 import matplotlib.pyplot as plt
 from tqdm import trange
-from lab2.problem1.DQN_agent import QAgent
+from lab2.problem1.DQN_agent import QAgent, RandomAgent
 
 
 def running_average(x, N):
@@ -36,15 +36,16 @@ def running_average(x, N):
 
 # Import and initialize the discrete Lunar Laner Environment
 env = gym.make('LunarLander-v2')
+env.seed(0)
 env.reset()
 
 # Parameters
-N_episodes = 100  # Number of episodes
-discount_factor = 0.95  # Value of the discount factor
+N_episodes = 600  # Number of episodes
+discount_factor = 0.99  # Value of the discount factor
 n_ep_running_average = 50  # Running average of 50 episodes
 n_actions = env.action_space.n  # Number of available actions
 dim_state = len(env.observation_space.high)  # State dimensionality
-min_eps = 0.05
+min_eps = 0.01
 max_eps = 0.99
 
 # We will use these variables to compute the average episodic reward and
@@ -54,6 +55,15 @@ episode_number_of_steps = []  # this list contains the number of steps per episo
 
 # Random agent initialization
 agent = QAgent(8, n_actions)
+random_agent = RandomAgent(n_actions)
+
+# fill buffer with random exps
+state = env.reset()
+for i in range(10000):
+    random_action = random_agent.forward(state)
+    next_state, reward, done, _ = env.step(random_action)
+    agent.save_exp_to_buffer(state, random_action, reward, next_state, done)
+    state = next_state
 
 ### Training process
 
