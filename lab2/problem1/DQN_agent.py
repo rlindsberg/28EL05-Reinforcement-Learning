@@ -15,6 +15,7 @@
 
 # Load packages
 import numpy as np
+import torch
 from torch import optim
 import torch.nn.functional as F
 
@@ -57,6 +58,18 @@ class QAgent:
                 loss.backward()
                 self.optimizer.step()
                 soft_update(self.q_network_local, self.q_network_target, 0.01)
+
+    def take_action(self, state):
+        state_tensor = torch.from_numpy(state).unsqueeze(0)
+        # put local network on evaluation mode
+        self.q_network_local.eval()
+        with torch.no_grad():
+            actions_q_values = self.q_network_local(state_tensor)
+        # put it back on training mode
+        self.q_network_local.train()
+
+        # return greedy action
+        return np.argmax(actions_q_values.data.numpy())
 
 
 class Agent(object):
