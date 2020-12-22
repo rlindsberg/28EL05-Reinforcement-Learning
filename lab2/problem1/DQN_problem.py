@@ -19,7 +19,7 @@ import gym
 import torch
 import matplotlib.pyplot as plt
 from tqdm import trange
-from DQN_agent import RandomAgent
+from lab2.problem1.DQN_agent import QAgent
 
 
 def running_average(x, N):
@@ -51,7 +51,7 @@ episode_reward_list = []  # this list contains the total reward per episode
 episode_number_of_steps = []  # this list contains the number of steps per episode
 
 # Random agent initialization
-agent = RandomAgent(n_actions)
+agent = QAgent(8, n_actions)
 
 ### Training process
 
@@ -67,7 +67,7 @@ for i in EPISODES:
     t = 0
     while not done:
         # Take a random action
-        action = agent.forward(state)
+        action = agent.take_action(state)
 
         # Get next state and reward.  The done variable
         # will be True if you reached the goal position,
@@ -76,6 +76,12 @@ for i in EPISODES:
 
         # Update episode reward
         total_episode_reward += reward
+
+        # Save exp to replay buffer
+        agent.save_exp_to_buffer(state, action, reward, next_state, done)
+
+        # learn with discount 0.99
+        agent.learn_by_experience(0.99)
 
         # Update state for next iteration
         state = next_state
