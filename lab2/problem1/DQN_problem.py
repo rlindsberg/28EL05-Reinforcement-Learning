@@ -44,6 +44,8 @@ discount_factor = 0.95  # Value of the discount factor
 n_ep_running_average = 50  # Running average of 50 episodes
 n_actions = env.action_space.n  # Number of available actions
 dim_state = len(env.observation_space.high)  # State dimensionality
+min_eps = 0.05
+max_eps = 0.99
 
 # We will use these variables to compute the average episodic reward and
 # the average number of steps per episode
@@ -65,9 +67,10 @@ for i in EPISODES:
     state = env.reset()
     total_episode_reward = 0.
     t = 0
+    epsilon = np.max(min_eps, max_eps-((max_eps-min_eps)*i)/((0.9*N_episodes)-1))
     while not done:
         # Take a random action
-        action = agent.take_action(state)
+        action = agent.take_action(state, epsilon)
 
         # Get next state and reward.  The done variable
         # will be True if you reached the goal position,

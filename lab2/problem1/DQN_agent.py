@@ -59,17 +59,20 @@ class QAgent:
                 self.optimizer.step()
                 soft_update(self.q_network_local, self.q_network_target, 0.01)
 
-    def take_action(self, state):
-        state_tensor = torch.from_numpy(state).unsqueeze(0)
-        # put local network on evaluation mode
-        self.q_network_local.eval()
-        with torch.no_grad():
-            actions_q_values = self.q_network_local(state_tensor)
-        # put it back on training mode
-        self.q_network_local.train()
+    def take_action(self, state, epsilon):
+        if epsilon < np.random.uniform(0, 1):
+            state_tensor = torch.from_numpy(state).unsqueeze(0)
+            # put local network on evaluation mode
+            self.q_network_local.eval()
+            with torch.no_grad():
+                actions_q_values = self.q_network_local(state_tensor)
+            # put it back on training mode
+            self.q_network_local.train()
 
-        # return greedy action
-        return np.argmax(actions_q_values.data.numpy())
+            # return greedy action
+            return np.argmax(actions_q_values.data.numpy())
+        else:
+            return np.random.randint(0, self.action_size)
 
 
 class Agent(object):
