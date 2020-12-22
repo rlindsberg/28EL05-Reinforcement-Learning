@@ -67,7 +67,7 @@ for i in EPISODES:
     state = env.reset()
     total_episode_reward = 0.
     t = 0
-    epsilon = np.max(min_eps, max_eps-((max_eps-min_eps)*i)/((0.9*N_episodes)-1))
+    epsilon = np.maximum(min_eps, max_eps - ((max_eps - min_eps) * i) / ((0.9 * N_episodes) - 1), casting='same_kind')
     while not done:
         # Take a random action
         action = agent.take_action(state, epsilon)
