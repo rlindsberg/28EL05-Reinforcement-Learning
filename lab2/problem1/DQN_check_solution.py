@@ -18,6 +18,7 @@ import numpy as np
 import gym
 import torch
 from tqdm import trange
+from lab2.problem1.DQN_agent import QAgent, RandomAgent
 
 
 def running_average(x, N):
@@ -34,8 +35,10 @@ def running_average(x, N):
 
 # Load model
 try:
-    model = torch.load('neural-network-1.pth')
-    print('Network model: {}'.format(model))
+    # Load model
+    model = QAgent(state_size=8, action_size=4)
+    dict = torch.load("neural-network-1.pth", map_location='cpu')
+    model.q_network_local.load_state_dict(dict)
 except:
     print('File neural-network-1.pth not found!')
     exit(-1)
@@ -64,7 +67,7 @@ for i in EPISODES:
         # Get next state and reward.  The done variable
         # will be True if you reached the goal position,
         # False otherwise
-        q_values = model(torch.tensor([state]))
+        q_values = model.q_network_local(torch.tensor([state]))
         _, action = torch.max(q_values, axis=1)
         next_state, reward, done, _ = env.step(action.item())
 
