@@ -15,6 +15,48 @@
 
 # Load packages
 import numpy as np
+from torch import optim
+import torch.nn.functional as F
+
+from lab2.problem1.q_network import QNetwork, DeepQNetwork
+from lab2.problem1.replay_buffer import ReplayBuffer
+
+
+def soft_update(local_model, target_model, tau):
+    for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
+        target_param.data.copy_(tau * local_param.data + (1.0 - tau) * target_param.data)
+
+
+class QAgent:
+    def __init__(self, state_size, action_size):
+        self.seed = 0
+        self.t = 0
+        self.state_size = state_size
+        self.action_size = action_size
+
+        self.q_network_local = QNetwork(state_size, action_size, 64, 64)
+        self.q_network_target = QNetwork(state_size, action_size, 64, 64)
+        # learning rate is 10^-4
+        self.optimizer = optim.Adam(self.q_network_local.parameters(), lr=1e-4)
+
+        self.replay_buffer = ReplayBuffer(100, 10)
+
+    def save_exp_to_buffer(self, state, action, reward, next_state, done):
+        self.replay_buffer.add_experience(state, action, reward, next_state, done)
+
+    def learn_by_experience(self, gamma):
+        time_to_learn = self.t % 4
+        if time_to_learn:
+            if len(self.replay_buffer.double_ended_queue) > 15:
+                states, actions, rewards, next_states, dones = self.replay_buffer.get_experiences_tuple()
+                q_targets_next = self.q_network_target(next_states).detach().max(1)[0].unsqueeze()
+                q_targets = rewards + (gamma * q_targets_next * (1 - dones))
+                q_expected = self.q_network_local(states).gather(1, actions)
+                loss = F.mse_loss(q_expected, q_targets)
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+                soft_update(self.q_network_local, self.q_network_target, 0.01)
 
 
 class Agent(object):
