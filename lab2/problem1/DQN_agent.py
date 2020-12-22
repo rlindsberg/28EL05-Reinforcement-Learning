@@ -15,6 +15,7 @@
 
 # Load packages
 import random
+import copy
 
 import numpy as np
 import torch
@@ -42,7 +43,7 @@ class QAgent:
         # learning rate is 10^-4
         self.optimizer = optim.Adam(self.q_network_local.parameters(), lr=1e-4)
 
-        self.replay_buffer = ReplayBuffer(100, 10)
+        self.replay_buffer = ReplayBuffer(10000, 64)
 
     def save_exp_to_buffer(self, state, action, reward, next_state, done):
         self.replay_buffer.add_experience(state, action, reward, next_state, done)
@@ -61,8 +62,7 @@ class QAgent:
 
         self.t = (self.t + 1) % 175
         if self.t == 0:
-            print("time to learn")
-            soft_update(self.q_network_local, self.q_network_target, 0.01)
+            self.q_network_target = copy.deepcopy(self.q_network_local)
 
     def take_action(self, state, epsilon):
         if epsilon < np.random.uniform(0, 1):

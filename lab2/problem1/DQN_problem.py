@@ -94,7 +94,7 @@ for i in EPISODES:
         agent.save_exp_to_buffer(state, action, reward, next_state, done)
 
         # learn with discount 0.99
-        agent.learn_by_experience(0.99)
+        agent.learn_by_experience(0.95)
 
         # Update state for next iteration
         state = next_state

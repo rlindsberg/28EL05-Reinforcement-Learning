@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
+import random
 
 
 class QNetwork(nn.Module):
@@ -7,7 +8,7 @@ class QNetwork(nn.Module):
     def __init__(self, state_size, action_size, input_layer_neurons=64, hidden_layer_neurons=64):
         # super class call
         super().__init__()
-        self.random_seed = 0
+        self.random_seed = random.seed(0)
 
         # torch.nn.Linear(in_features: int, out_features: int, bias: bool = True)
         self.fc1 = nn.Linear(state_size, input_layer_neurons)
@@ -36,7 +37,7 @@ class DeepQNetwork(nn.Module):
     def __init__(self, state_size, action_size, input_layer_neurons=64, hidden_layer_neurons=128):
         # super class call
         super().__init__()
-        self.random_seed = 0
+        self.random_seed = random.seed(0)
 
         self.fc1 = nn.Linear(state_size, input_layer_neurons)
         self.fc2 = nn.Linear(input_layer_neurons, hidden_layer_neurons)
