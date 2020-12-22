@@ -99,6 +99,8 @@ for i in EPISODES:
         # Update state for next iteration
         state = next_state
         t += 1
+        if t == 1000:
+            break
 
     # Append episode reward and total number of steps
     episode_reward_list.append(total_episode_reward)

@@ -49,7 +49,7 @@ class QAgent:
         self.replay_buffer.add_experience(state, action, reward, next_state, done)
 
     def learn_by_experience(self, gamma):
-        if len(self.replay_buffer.double_ended_queue) > 15:
+        if len(self.replay_buffer.double_ended_queue) > 64:
             experiences = self.replay_buffer.get_experiences_tuple()
             states, actions, rewards, next_states, dones = experiences
             q_targets_next = self.q_network_target(next_states).detach().max(1)[0].unsqueeze(1)
@@ -66,7 +66,7 @@ class QAgent:
 
     def take_action(self, state, epsilon):
         if epsilon < np.random.uniform(0, 1):
-            state_tensor = torch.from_numpy(state).unsqueeze(0)
+            state_tensor = torch.from_numpy(state).float().unsqueeze(0)
             # put local network on evaluation mode
             self.q_network_local.eval()
             with torch.no_grad():
