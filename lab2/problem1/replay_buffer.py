@@ -26,7 +26,7 @@ class ReplayBuffer:
         np_array_states = np.vstack([exp.state for exp in exps])
         np_array_actions = np.vstack([exp.action for exp in exps])
         np_array_rewards = np.vstack([exp.reward for exp in exps])
-        np_array_next_states = np.vstack([exp.state for exp in exps])
+        np_array_next_states = np.vstack([exp.next_state for exp in exps])
         np_array_dones = np.vstack([exp.done for exp in exps]).astype(np.uint8)
 
         # convert to tensors
