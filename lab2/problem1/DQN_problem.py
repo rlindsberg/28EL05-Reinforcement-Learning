@@ -59,7 +59,7 @@ random_agent = RandomAgent(n_actions)
 
 # fill buffer with random exps
 state = env.reset()
-for i in range(10000):
+for i in range(100):
     random_action = random_agent.forward(state)
     next_state, reward, done, _ = env.step(random_action)
     agent.save_exp_to_buffer(state, random_action, reward, next_state, done)
@@ -78,6 +78,12 @@ for i in EPISODES:
     total_episode_reward = 0.
     t = 0
     epsilon = np.maximum(min_eps, max_eps - ((max_eps - min_eps) * i) / ((0.9 * N_episodes) - 1), casting='same_kind')
+
+    if i % 100 == 0:
+        print("\n Epsilon is ")
+        print(epsilon)
+        print("\n")
+
     while not done:
         # Take a random action
         action = agent.take_action(state, epsilon)
@@ -94,7 +100,7 @@ for i in EPISODES:
         agent.save_exp_to_buffer(state, action, reward, next_state, done)
 
         # learn with discount 0.99
-        agent.learn_by_experience(0.95)
+        agent.learn_by_experience(0.99)
 
         # Update state for next iteration
         state = next_state
@@ -117,6 +123,12 @@ for i in EPISODES:
             i, total_episode_reward, t,
             running_average(episode_reward_list, n_ep_running_average)[-1],
             running_average(episode_number_of_steps, n_ep_running_average)[-1]))
+
+    ave_score = running_average(episode_reward_list, n_ep_running_average)[-1]
+    if ave_score != 0:
+        if ave_score > 100:
+            print("i is" + str(i) + '\n')
+            torch.save(agent.q_network_local.state_dict(), 'neural-network-1.pth')
 
 # Plot Rewards and steps
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(16, 9))
