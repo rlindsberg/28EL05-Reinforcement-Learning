@@ -38,6 +38,33 @@ def plot(X, Y, Z):
     plt.savefig("question_f_plot.png")
     plt.show()
 
+def plot_action(X, Y, Z):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+
+    # Make data.
+    X, Y = np.meshgrid(X, Y)
+    # reshape to columns: 120, rows: dont care
+    Z = np.reshape(Z, (-1, 120))
+
+    # Plot the surface.
+    surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False)
+
+    # Customize the z axis.
+    ax.set_zlim(0, 3)
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    ax.zaxis.set_major_formatter(FormatStrFormatter('%.0f'))
+
+    # Add a color bar which maps values to colors.
+    fig.colorbar(surf, shrink=0.5, aspect=10)
+    ax.set_xlabel('Height')
+    ax.set_ylabel('Angle')
+    plt.title('The action value function of height and angle of the lander')
+
+    plt.savefig("question_f_plot_2.png")
+    plt.show()
+
 
 def load_pre_trained_model(path):
     agent = QAgent(state_size=8, action_size=4)
@@ -57,6 +84,7 @@ def main():
     y_array = []
     omega_array = []
     max_q_array = []
+    max_a_array = []
 
     model = load_pre_trained_model("neural-network-1.pth")
 
@@ -80,10 +108,16 @@ def main():
             state[4] = o
             action_q_values = model(torch.tensor([state]))
             max_q = np.max(action_q_values.data.numpy())
+            max_a = np.argmax(action_q_values.data.numpy())
+
             # add to arrays for plotting later
             max_q_array.append(max_q)
+            max_a_array.append(max_a)
+
 
     plot(y_array, omega_array, max_q_array)
+    plot_action(y_array, omega_array, max_a_array)
+
 
 
 if __name__ == '__main__':
