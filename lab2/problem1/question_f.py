@@ -3,11 +3,40 @@ from numpy import arange
 import gym
 import torch
 from math import pi
-from tqdm import trange
 from lab2.problem1.DQN_agent import QAgent
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+
+
+def plot(X, Y, Z):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+
+    # Make data.
+    X, Y = np.meshgrid(X, Y)
+    # reshape to columns: 120, rows: dont care
+    Z = np.reshape(Z, (-1, 120))
+
+    # Plot the surface.
+    surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False)
+
+    # Customize the z axis.
+    ax.set_zlim(0, 240)
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    ax.zaxis.set_major_formatter(FormatStrFormatter('%.0f'))
+
+    # Add a color bar which maps values to colors.
+    fig.colorbar(surf, shrink=0.5, aspect=10)
+    ax.set_xlabel('Height')
+    ax.set_ylabel('Angle')
+    plt.title('The Q value function of height and angle of the lander')
+
+    plt.savefig("question_f_plot.png")
+    plt.show()
 
 
 def load_pre_trained_model(path):
@@ -54,6 +83,7 @@ def main():
             # add to arrays for plotting later
             max_q_array.append(max_q)
 
+    plot(y_array, omega_array, max_q_array)
 
 
 if __name__ == '__main__':
