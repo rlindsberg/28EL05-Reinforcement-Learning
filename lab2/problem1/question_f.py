@@ -39,22 +39,21 @@ def main():
 
     # varying y and omega
     for y in arange(0, 1.5, step=0.0125):
-        for degree in arange(-180, 180, step=3):
-            omega = degree / 180 * pi
+        y_array.append(y)
+    for degree in arange(-180, 180, step=3):
+        omega = degree / 180 * pi
+        omega_array.append(omega)
+
+    # Get action_q_values
+    for y in y_array:
+        for o in omega_array:
             state[1] = y
-            state[4] = omega
+            state[4] = o
             action_q_values = model(torch.tensor([state]))
             max_q = np.max(action_q_values.data.numpy())
-
             # add to arrays for plotting later
-            y_array.append(y)
-            omega_array.append(omega)
             max_q_array.append(max_q)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(y_array, omega_array, max_q_array, zdir='z', c='red')
-    plt.savefig("question_f_plot.png")
 
 
 if __name__ == '__main__':
