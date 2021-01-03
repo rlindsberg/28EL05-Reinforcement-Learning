@@ -52,6 +52,12 @@ class Maze:
         self.rewards = self.__rewards(weights=weights,
                                       random_rewards=random_rewards)
 
+        self.start = (0, 0)
+        self.goal = (6, 5)
+        self.__dead_state = "dead"
+        self.__escaped_state = "escaped"
+        self.__dont_care_action = "dont care"
+
     def __actions(self):
         actions = dict()
         actions[self.STAY] = (0, 0)
