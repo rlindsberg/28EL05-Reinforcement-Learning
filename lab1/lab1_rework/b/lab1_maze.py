@@ -75,10 +75,10 @@ class Maze:
         for i in range(self.maze.shape[0]):
             for j in range(self.maze.shape[1]):
                 for k in range(self.maze.shape[0]):
-                    for l in range(self.maze.shape[1]):
+                    for ll in range(self.maze.shape[1]):
                         if self.maze[i, j] != 1:
-                            states[s] = (i, j, k, l)
-                            states_map[(i, j, k, l)] = s
+                            states[s] = (i, j, k, ll)
+                            states_map[(i, j, k, ll)] = s
                             s += 1
         return states, states_map
 
