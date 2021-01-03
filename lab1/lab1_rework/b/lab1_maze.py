@@ -160,31 +160,21 @@ class Maze:
         rewards = np.zeros((self.n_states, self.n_actions))
 
         # If the rewards are not described by a weight matrix
-        if weights is None:
-            for s in range(self.n_states):
-                for a in range(self.n_actions):
-                    next_s = self.__move(s, a)
-                    # Rewrd for hitting a wall
-                    if s == next_s and a != self.STAY:
-                        rewards[s, a] = self.IMPOSSIBLE_REWARD
-                    # Reward for reaching the exit
-                    elif s == next_s and self.maze[self.states[next_s][0:2]] == 2:
-                        rewards[s, a] = self.GOAL_REWARD
-                    # Reward for taking a step to an empty cell that is not the exit
-                    elif self.states[s][0] == self.states[s][2] and \
-                            self.states[s][1] == self.states[s][3]:
-                        rewards[s, a] = self.EATEN_REWARD
-                    else:
-                        rewards[s, a] = self.STEP_REWARD
-
-        # If the weights are descrobed by a weight matrix
-        else:
-            for s in range(self.n_states):
-                for a in range(self.n_actions):
-                    next_s = self.__move(s, a)
-                    i, j = self.states[next_s]
-                    # Simply put the reward as the weights o the next state.
-                    rewards[s, a] = weights[i][j]
+        for s in range(self.n_states):
+            for a in range(self.n_actions):
+                next_s = self.__move(s, a)
+                # Rewrd for hitting a wall
+                if s == next_s and a != self.STAY:
+                    rewards[s, a] = self.IMPOSSIBLE_REWARD
+                # Reward for reaching the exit
+                elif s == next_s and self.maze[self.states[next_s][0:2]] == 2:
+                    rewards[s, a] = self.GOAL_REWARD
+                # Reward for taking a step to an empty cell that is not the exit
+                elif self.states[s][0] == self.states[s][2] and \
+                        self.states[s][1] == self.states[s][3]:
+                    rewards[s, a] = self.EATEN_REWARD
+                else:
+                    rewards[s, a] = self.STEP_REWARD
 
         return rewards
 
