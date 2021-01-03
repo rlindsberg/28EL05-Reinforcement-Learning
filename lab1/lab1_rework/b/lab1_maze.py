@@ -61,13 +61,11 @@ class Maze:
         actions[self.MOVE_DOWN] = (1, 0)
         return actions
 
-    def __actions_minotaur(self):
-        actions = dict()
-        actions[self.MOVE_LEFT] = (0, -1)
-        actions[self.MOVE_RIGHT] = (0, 1)
-        actions[self.MOVE_UP] = (-1, 0)
-        actions[self.MOVE_DOWN] = (1, 0)
-        return actions
+    def __actions_minotaur(self, is_allowed_to_stand_still):
+        if is_allowed_to_stand_still == 1:
+            return self.__actions()
+        else:
+            return self.__actions()[1:]  # ignore the others
 
     def __states(self):
         states = dict()
