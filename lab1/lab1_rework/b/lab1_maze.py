@@ -44,7 +44,7 @@ class Maze:
         """
         self.maze = maze
         self.actions = self.__actions()
-        self.actions_minotaur = self.__actions_minotaur()
+        self.actions_minotaur = self.__actions_minotaur(0)
         self.states, self.map = self.__states()
         self.n_actions = len(self.actions)
         self.n_states = len(self.states)
@@ -69,7 +69,7 @@ class Maze:
 
     def __states(self):
         states = dict()
-        map = dict()
+        states_map = dict()
         end = False
         s = 0
         for i in range(self.maze.shape[0]):
@@ -78,9 +78,9 @@ class Maze:
                     for l in range(self.maze.shape[1]):
                         if self.maze[i, j] != 1:
                             states[s] = (i, j, k, l)
-                            map[(i, j, k, l)] = s
+                            states_map[(i, j, k, l)] = s
                             s += 1
-        return states, map
+        return states, states_map
 
     def __move(self, state, action):
         """ Makes a step in the maze, given a current position and an action.
