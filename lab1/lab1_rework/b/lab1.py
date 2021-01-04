@@ -2,7 +2,7 @@ import numpy as np
 import lab1_maze as mz
 from matplotlib import pyplot as plt
 import csv
-
+from tqdm import tqdm
 
 def define_maze():
     maze = np.zeros((7, 8))
@@ -67,11 +67,11 @@ def main():
     statistics_array = []
 
     # time horizon is 1-20
-    for time_horizon in range(1, 21):
+    for time_horizon in tqdm(range(1, 21), position=1, desc='horizon'):
         stats = {"time_horizon": time_horizon, "win": 0, "lose": 0, "time": 0}
 
         # run 100 games
-        for game in range(100):
+        for game in tqdm(range(100), position=0, desc='game'):
             maze, env = init_game()
             path = run_game(maze, env, horizon=time_horizon)
             result = get_game_result(path)
