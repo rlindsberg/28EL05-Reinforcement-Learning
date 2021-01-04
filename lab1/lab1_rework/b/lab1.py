@@ -39,7 +39,7 @@ def run_game(maze, env, horizon):
 
     # Simulate the shortest path starting from position A
     method = 'DynProg'
-    start = (0, 0, 4, 4)
+    start = (0, 0, 6, 5)
     path = env.simulate(start, policy, method)
     return path
 

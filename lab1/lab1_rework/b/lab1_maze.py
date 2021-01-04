@@ -35,9 +35,9 @@ class Maze:
 
     # Reward values
     STEP_REWARD = -1
-    GOAL_REWARD = 100
-    IMPOSSIBLE_REWARD = -100
-    EATEN_REWARD = -10000
+    GOAL_REWARD = 10
+    IMPOSSIBLE_REWARD = -10
+    EATEN_REWARD = -100
 
     def __init__(self, maze, weights=None, random_rewards=False):
         """ Constructor of the environment Maze.
