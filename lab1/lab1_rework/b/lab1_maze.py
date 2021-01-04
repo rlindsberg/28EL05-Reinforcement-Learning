@@ -35,16 +35,16 @@ class Maze:
 
     # Reward values
     STEP_REWARD = -1
-    GOAL_REWARD = 0
+    GOAL_REWARD = 100
     IMPOSSIBLE_REWARD = -100
-    EATEN_REWARD = -1000
+    EATEN_REWARD = -10000
 
     def __init__(self, maze, weights=None, random_rewards=False):
         """ Constructor of the environment Maze.
         """
         self.maze = maze
         self.actions = self.__actions()
-        self.actions_minotaur = self.__actions_minotaur(0)
+        self.actions_minotaur = self.__actions_minotaur()
         self.states, self.map = self.__states()
         self.n_actions = len(self.actions)
         self.n_states = len(self.states)
@@ -67,11 +67,14 @@ class Maze:
         actions[self.MOVE_DOWN] = (1, 0)
         return actions
 
-    def __actions_minotaur(self, is_allowed_to_stand_still):
-        if is_allowed_to_stand_still == 1:
-            return self.__actions()
-        else:
-            return self.__actions()[1:]  # ignore the others
+    def __actions_minotaur(self):
+        actions = dict()
+        actions[self.STAY] = (0, 0)
+        actions[self.MOVE_LEFT] = (0, -1)
+        actions[self.MOVE_RIGHT] = (0, 1)
+        actions[self.MOVE_UP] = (-1, 0)
+        actions[self.MOVE_DOWN] = (1, 0)
+        return actions
 
     def __states(self):
         states = dict()
@@ -128,7 +131,7 @@ class Maze:
         action_y = self.actions[action][1]
         row = current_state_x + action_x
         col = current_state_y + action_y
-        
+
         # Is the future position an impossible one ?
         hitting_maze_walls = (row == -1) or (row == 7) or \
                              (col == -1) or (col == 8)
@@ -170,8 +173,7 @@ class Maze:
                 elif s == next_s and self.maze[self.states[next_s][0:2]] == 2:
                     rewards[s, a] = self.GOAL_REWARD
                 # Reward for taking a step to an empty cell that is not the exit
-                elif self.states[s][0] == self.states[s][2] and \
-                        self.states[s][1] == self.states[s][3]:
+                elif self.states[next_s][0] == self.states[next_s][2] and self.states[next_s][1] == self.states[next_s][3]:
                     rewards[s, a] = self.EATEN_REWARD
                 else:
                     rewards[s, a] = self.STEP_REWARD
