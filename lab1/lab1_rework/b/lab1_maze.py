@@ -35,9 +35,9 @@ class Maze:
 
     # Reward values
     STEP_REWARD = -1
-    GOAL_REWARD = 0
+    GOAL_REWARD = 100
     IMPOSSIBLE_REWARD = -100
-    EATEN_REWARD = -1000
+    EATEN_REWARD = -10000
 
     def __init__(self, maze, weights=None, random_rewards=False):
         """ Constructor of the environment Maze.
@@ -52,6 +52,12 @@ class Maze:
         self.rewards = self.__rewards(weights=weights,
                                       random_rewards=random_rewards)
 
+        self.start = (0, 0)
+        self.goal = (6, 5)
+        self.__dead_state = "dead"
+        self.__escaped_state = "escaped"
+        self.__dont_care_action = "dont care"
+
     def __actions(self):
         actions = dict()
         actions[self.STAY] = (0, 0)
@@ -63,6 +69,7 @@ class Maze:
 
     def __actions_minotaur(self):
         actions = dict()
+        actions[self.STAY] = (0, 0)
         actions[self.MOVE_LEFT] = (0, -1)
         actions[self.MOVE_RIGHT] = (0, 1)
         actions[self.MOVE_UP] = (-1, 0)
@@ -71,18 +78,18 @@ class Maze:
 
     def __states(self):
         states = dict()
-        map = dict()
+        states_map = dict()
         end = False
         s = 0
         for i in range(self.maze.shape[0]):
             for j in range(self.maze.shape[1]):
                 for k in range(self.maze.shape[0]):
-                    for l in range(self.maze.shape[1]):
+                    for ll in range(self.maze.shape[1]):
                         if self.maze[i, j] != 1:
-                            states[s] = (i, j, k, l)
-                            map[(i, j, k, l)] = s
+                            states[s] = (i, j, k, ll)
+                            states_map[(i, j, k, ll)] = s
                             s += 1
-        return states, map
+        return states, states_map
 
     def __move(self, state, action):
         """ Makes a step in the maze, given a current position and an action.
@@ -91,8 +98,13 @@ class Maze:
             :return tuple next_cell: Position (x,y) on the maze that agent transitions to.
         """
         # Compute the future position given current (state, action)
-        row = self.states[state][0] + self.actions[action][0]
-        col = self.states[state][1] + self.actions[action][1]
+        current_state_x = self.states[state][0]
+        current_state_y = self.states[state][1]
+        action_x = self.actions[action][0]
+        action_y = self.actions[action][1]
+        row = current_state_x + action_x
+        col = current_state_y + action_y
+
         # Is the future position an impossible one ?
         hitting_maze_walls = (row == -1) or (row == self.maze.shape[0]) or \
                              (col == -1) or (col == self.maze.shape[1]) or \
@@ -113,11 +125,13 @@ class Maze:
         action = random.randint(1, 4)
 
         # Compute the future position given current (state, action)
-        debug_states = self.states
-        debug_states_states = self.states[state]
-        debug_minotaur_action = self.actions_minotaur
-        row = self.states[state][2] + self.actions_minotaur[action][0]
-        col = self.states[state][3] + self.actions_minotaur[action][1]
+        current_state_x = self.states[state][2]
+        current_state_y = self.states[state][3]
+        action_x = self.actions[action][0]
+        action_y = self.actions[action][1]
+        row = current_state_x + action_x
+        col = current_state_y + action_y
+
         # Is the future position an impossible one ?
         hitting_maze_walls = (row == -1) or (row == 7) or \
                              (col == -1) or (col == 8)
@@ -149,31 +163,20 @@ class Maze:
         rewards = np.zeros((self.n_states, self.n_actions))
 
         # If the rewards are not described by a weight matrix
-        if weights is None:
-            for s in range(self.n_states):
-                for a in range(self.n_actions):
-                    next_s = self.__move(s, a)
-                    # Rewrd for hitting a wall
-                    if s == next_s and a != self.STAY:
-                        rewards[s, a] = self.IMPOSSIBLE_REWARD
-                    # Reward for reaching the exit
-                    elif s == next_s and self.maze[self.states[next_s][0:2]] == 2:
-                        rewards[s, a] = self.GOAL_REWARD
-                    # Reward for taking a step to an empty cell that is not the exit
-                    elif self.states[s][0] == self.states[s][2] and \
-                            self.states[s][1] == self.states[s][3]:
-                        rewards[s, a] = self.EATEN_REWARD
-                    else:
-                        rewards[s, a] = self.STEP_REWARD
-
-        # If the weights are descrobed by a weight matrix
-        else:
-            for s in range(self.n_states):
-                for a in range(self.n_actions):
-                    next_s = self.__move(s, a)
-                    i, j = self.states[next_s]
-                    # Simply put the reward as the weights o the next state.
-                    rewards[s, a] = weights[i][j]
+        for s in range(self.n_states):
+            for a in range(self.n_actions):
+                next_s = self.__move(s, a)
+                # Rewrd for hitting a wall
+                if s == next_s and a != self.STAY:
+                    rewards[s, a] = self.IMPOSSIBLE_REWARD
+                # Reward for reaching the exit
+                elif s == next_s and self.maze[self.states[next_s][0:2]] == 2:
+                    rewards[s, a] = self.GOAL_REWARD
+                # Reward for taking a step to an empty cell that is not the exit
+                elif self.states[next_s][0] == self.states[next_s][2] and self.states[next_s][1] == self.states[next_s][3]:
+                    rewards[s, a] = self.EATEN_REWARD
+                else:
+                    rewards[s, a] = self.STEP_REWARD
 
         return rewards
 
