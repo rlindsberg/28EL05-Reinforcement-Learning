@@ -34,8 +34,8 @@ class Maze:
     }
 
     # Reward values
-    STEP_REWARD = -5
-    GOAL_REWARD = 10
+    STEP_REWARD = 0
+    GOAL_REWARD = 100
     IMPOSSIBLE_REWARD = -10
     EATEN_REWARD = -100
 
@@ -279,7 +279,20 @@ def dynamic_programming(env, horizon):
         for s in range(n_states):
             for a in range(n_actions):
                 # Update of the temporary Q values
-                Q[s, a] = r[s, a] + np.dot(p[:, s, a], V[:, t + 1])
+                Q[s, a] = Q[s, a] + 0.1 * (np.dot(p[:, s, a], V[:, t + 1]) - Q[s, a])
+        # Update by taking the maximum Q value w.r.t the action a
+        V[:, t] = np.max(Q, 1)
+        # The optimal action is the one that maximizes the Q function
+        policy[:, t] = np.argmax(Q, 1)
+
+
+    # The dynamic programming bakwards recursion
+    for t in range(T - 1, -1, -1):
+        # Update the value function acccording to the bellman equation
+        for s in range(n_states):
+            for a in range(n_actions):
+                # Update of the temporary Q values
+                Q[s, a] = Q[s, a] + 0.1 * (np.dot(p[:, s, a], V[:, t + 1]) - Q[s, a])
         # Update by taking the maximum Q value w.r.t the action a
         V[:, t] = np.max(Q, 1)
         # The optimal action is the one that maximizes the Q function
