@@ -85,10 +85,10 @@ class Maze:
             for j in range(self.maze.shape[1]):
                 for k in range(self.maze.shape[0]):
                     for ll in range(self.maze.shape[1]):
-                        if self.maze[i, j] != 1:
-                            states[s] = (i, j, k, ll)
-                            states_map[(i, j, k, ll)] = s
-                            s += 1
+                        # remove wall check for player (add more states)
+                        states[s] = (i, j, k, ll)
+                        states_map[(i, j, k, ll)] = s
+                        s += 1
         return states, states_map
 
     def __move(self, state, action):
