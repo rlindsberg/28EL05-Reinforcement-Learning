@@ -84,7 +84,8 @@ def main():
         csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         for stat in statistics_array:
             win_rate = stat["win"] / 100
-            csv_writer.writerow([stat["time_horizon"], win_rate])
+            lose_rate = stat["lose"] / 100
+            csv_writer.writerow([stat["time_horizon"], win_rate, lose_rate])
 
 
 if __name__ == '__main__':

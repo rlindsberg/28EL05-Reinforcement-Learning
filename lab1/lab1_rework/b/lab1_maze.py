@@ -34,7 +34,7 @@ class Maze:
     }
 
     # Reward values
-    STEP_REWARD = -1
+    STEP_REWARD = -5
     GOAL_REWARD = 10
     IMPOSSIBLE_REWARD = -10
     EATEN_REWARD = -100
@@ -166,15 +166,16 @@ class Maze:
         for s in range(self.n_states):
             for a in range(self.n_actions):
                 next_s = self.__move(s, a)
+
+                # Reward for taking a step to an empty cell that is not the exit
+                if self.states[next_s][0] == self.states[next_s][2] and self.states[next_s][1] == self.states[next_s][3]:
+                    rewards[s, a] = self.EATEN_REWARD
                 # Rewrd for hitting a wall
-                if s == next_s and a != self.STAY:
+                elif s == next_s and a != self.STAY:
                     rewards[s, a] = self.IMPOSSIBLE_REWARD
                 # Reward for reaching the exit
                 elif s == next_s and self.maze[self.states[next_s][0:2]] == 2:
                     rewards[s, a] = self.GOAL_REWARD
-                # Reward for taking a step to an empty cell that is not the exit
-                elif self.states[next_s][0] == self.states[next_s][2] and self.states[next_s][1] == self.states[next_s][3]:
-                    rewards[s, a] = self.EATEN_REWARD
                 else:
                     rewards[s, a] = self.STEP_REWARD
 
