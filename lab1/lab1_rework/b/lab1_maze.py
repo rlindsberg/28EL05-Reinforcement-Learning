@@ -155,7 +155,33 @@ class Maze:
         for s in range(self.n_states):
             for a in range(self.n_actions):
                 next_s = self.__move(s, a)
-                transition_probabilities[next_s, s, a] = 1
+
+                # minotaur moves
+                minotaur_x = self.states[next_s][2]
+                minotaur_y = self.states[next_s][3]
+                possible_states = []
+                for action in range(1, 5):
+                    action_x = self.actions[action][0]
+                    action_y = self.actions[action][1]
+                    row = minotaur_x + action_x
+                    col = minotaur_y + action_y
+
+                    # Is the future position an impossible one ?
+                    hitting_maze_walls = (row == -1) or (row == 7) or \
+                                         (col == -1) or (col == 8)
+                    # Based on the impossiblity check return the next state.
+                    if hitting_maze_walls:
+                        # next_s <- s
+                        possible_states.append(s)
+                    else:
+                        # next_s <- self.map[(self.states[state][0], self.states[state][1], row, col)]
+                        possible_states.append(self.map[(self.states[next_s][0], self.states[next_s][1], row, col)])
+
+                len_possible_minotaur_next_state = possible_states.__len__()
+                probability = 1/len_possible_minotaur_next_state
+                for possible_minotaur_next_state in possible_states:
+                    transition_probabilities[possible_minotaur_next_state, s, a] += probability
+
         return transition_probabilities
 
     def __rewards(self, weights=None, random_rewards=None):
