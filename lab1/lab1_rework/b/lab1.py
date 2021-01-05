@@ -34,9 +34,13 @@ def init_game():
     return maze, env
 
 
-def run_game(maze, env, horizon):
+def get_policy(env, horizon):
     # Solve the MDP problem with dynamic programming
     V, policy = mz.dynamic_programming(env, horizon)
+    return policy
+
+
+def run_game(env, policy):
 
     # Simulate the shortest path starting from position A
     method = 'DynProg'
@@ -67,13 +71,16 @@ def main():
     statistics_array = []
 
     # time horizon is 1-20
-    for time_horizon in tqdm(range(1, 21), position=1, desc='horizon'):
+    for time_horizon in tqdm(range(19, 21), position=1, desc='horizon'):
         stats = {"time_horizon": time_horizon, "win": 0, "lose": 0, "time": 0}
+
+        maze, env = init_game()
+        policy = get_policy(env, horizon=time_horizon)
 
         # run 100 games
         for game in tqdm(range(100), position=0, desc='game'):
             maze, env = init_game()
-            path = run_game(maze, env, horizon=time_horizon)
+            path = run_game(env, policy)
             result = get_game_result(path)
             stats[result] += 1
 
