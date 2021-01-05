@@ -36,8 +36,8 @@ def init_game():
 
 def get_policy(env, horizon):
     # Solve the MDP problem with dynamic programming
-    V, policy = mz.dynamic_programming(env, horizon)
-    return policy
+    Q, V, policy = mz.dynamic_programming(env, horizon)
+    return Q, V, policy
 
 
 def run_game(env, policy):
@@ -68,14 +68,24 @@ def get_game_result(path):
 
 
 def main():
+    # ### Use this for debugging ###
+    # # env.states is a dict that contains all states
+    # maze, env = init_game()
+    # Q, V, policy = get_policy(env, 20)
+    # path = run_game(env, policy)
+    # animate_game_replay(maze, path)
+    # print(policy)
+    # ### Use this for debugging ###
+
+    # ### Use this for getting stats ###
     statistics_array = []
 
     # time horizon is 1-20
-    for time_horizon in tqdm(range(19, 21), position=1, desc='horizon'):
+    for time_horizon in tqdm(range(12, 21), position=1, desc='horizon'):
         stats = {"time_horizon": time_horizon, "win": 0, "lose": 0, "time": 0}
 
         maze, env = init_game()
-        policy = get_policy(env, horizon=time_horizon)
+        Q, V, policy = get_policy(env, horizon=time_horizon)
 
         # run 100 games
         for game in tqdm(range(100), position=0, desc='game'):
@@ -93,6 +103,8 @@ def main():
             win_rate = stat["win"] / 100
             lose_rate = stat["lose"] / 100
             csv_writer.writerow([stat["time_horizon"], win_rate, lose_rate])
+
+    # ### Use this for getting stats ###
 
 
 if __name__ == '__main__':
