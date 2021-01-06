@@ -3,6 +3,7 @@ import lab1_maze as mz
 from matplotlib import pyplot as plt
 import csv
 from tqdm import tqdm
+import pandas as pd
 
 def define_maze():
     maze = np.zeros((7, 8))
@@ -105,7 +106,6 @@ def main():
             csv_writer.writerow([stat["time_horizon"], win_rate, lose_rate])
 
     # ### Use this for getting stats ###
-
 
 if __name__ == '__main__':
     main()
