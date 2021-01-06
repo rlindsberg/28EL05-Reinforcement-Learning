@@ -3,7 +3,6 @@ import lab1_geo_maze as mz
 from matplotlib import pyplot as plt
 import csv
 from tqdm import tqdm
-import pandas as pd
 
 def define_maze():
     maze = np.zeros((7, 8))
@@ -86,7 +85,7 @@ def main():
     maze, env = init_game()
     Q, V, policy = get_policy(env, horizon=training_time_horizon)
 
-    stats = {"win": 0, "lost": 0, "time": 0}
+    stat = {"win": 0, "lost": 0, "time": 0}
 
     for game in tqdm(range(10000), desc='game'):
         actual_time_horizon = np.random.geometric(p=1/30)
@@ -106,17 +105,13 @@ def main():
         maze, env = init_game()
         path = run_game(env, policy, actual_time_horizon)
         result = get_game_result(path)
-        stats[result] += 1
-
-        # save results of 100 games to array
-        statistics_array.append(stats)
+        stat[result] += 1
 
     with open('lab1_c.csv', mode='w') as csv_file:
         csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        for stat in statistics_array:
-            win_rate = stat["win"] / 10000
-            lost_rate = stat["lost"] / 10000
-            csv_writer.writerow([win_rate, lost_rate])
+        win_rate = stat["win"] / 10000
+        lost_rate = stat["lost"] / 10000
+        csv_writer.writerow([win_rate, lost_rate])
 
     # ### Use this for getting stats ###
 
