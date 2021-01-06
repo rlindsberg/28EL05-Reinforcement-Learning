@@ -107,20 +107,5 @@ def main():
 
     # ### Use this for getting stats ###
 
-    # plot
-    # plot
-    df = pd.read_csv('lab1_b.csv', sep=",")
-    col_times = df['Times']
-    col_money = df['Money']
-    x = col_times
-    y = col_money
-    plt.figure()
-    plt.scatter(x, y)
-
-    plt.title('The expected value of the game')
-    plt.xlabel('Times the game is played')
-    plt.ylabel('Average money earned')
-
-
 if __name__ == '__main__':
     main()
