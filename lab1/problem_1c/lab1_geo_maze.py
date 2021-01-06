@@ -34,7 +34,7 @@ class Maze:
     }
 
     # Reward values
-    STEP_REWARD = 0
+    STEP_REWARD = -2
     GOAL_REWARD = 100
     IMPOSSIBLE_REWARD = -10
     EATEN_REWARD = -100

@@ -107,7 +107,7 @@ def main():
         result = get_game_result(path)
         stat[result] += 1
 
-    with open('lab1_c.csv', mode='w') as csv_file:
+    with open('lab1_c_minus2.csv', mode='w') as csv_file:
         csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         win_rate = stat["win"] / 10000
         lost_rate = stat["lost"] / 10000
