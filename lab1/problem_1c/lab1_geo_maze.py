@@ -34,10 +34,10 @@ class Maze:
     }
 
     # Reward values
-    STEP_REWARD = -1
-    GOAL_REWARD = 0
-    IMPOSSIBLE_REWARD = -100
-    EATEN_REWARD = -1000
+    STEP_REWARD = 0
+    GOAL_REWARD = 100
+    IMPOSSIBLE_REWARD = -10
+    EATEN_REWARD = -100
 
     def __init__(self, maze, weights=None, random_rewards=False):
         """ Constructor of the environment Maze.
@@ -51,6 +51,12 @@ class Maze:
         self.transition_probabilities = self.__transitions()
         self.rewards = self.__rewards(weights=weights,
                                       random_rewards=random_rewards)
+
+        self.start = (0, 0)
+        self.goal = (6, 5)
+        self.__dead_state = "dead"
+        self.__escaped_state = "escaped"
+        self.__dont_care_action = "dont care"
 
     def __actions(self):
         actions = dict()
@@ -72,18 +78,18 @@ class Maze:
 
     def __states(self):
         states = dict()
-        map = dict()
+        states_map = dict()
         end = False
         s = 0
         for i in range(self.maze.shape[0]):
             for j in range(self.maze.shape[1]):
                 for k in range(self.maze.shape[0]):
-                    for l in range(self.maze.shape[1]):
-                        if self.maze[i, j] != 1:
-                            states[s] = (i, j, k, l)
-                            map[(i, j, k, l)] = s
-                            s += 1
-        return states, map
+                    for ll in range(self.maze.shape[1]):
+                        # remove wall check for player (add more states)
+                        states[s] = (i, j, k, ll)
+                        states_map[(i, j, k, ll)] = s
+                        s += 1
+        return states, states_map
 
     def __move(self, state, action):
         """ Makes a step in the maze, given a current position and an action.
@@ -92,8 +98,13 @@ class Maze:
             :return tuple next_cell: Position (x,y) on the maze that agent transitions to.
         """
         # Compute the future position given current (state, action)
-        row = self.states[state][0] + self.actions[action][0]
-        col = self.states[state][1] + self.actions[action][1]
+        current_state_x = self.states[state][0]
+        current_state_y = self.states[state][1]
+        action_x = self.actions[action][0]
+        action_y = self.actions[action][1]
+        row = current_state_x + action_x
+        col = current_state_y + action_y
+
         # Is the future position an impossible one ?
         hitting_maze_walls = (row == -1) or (row == self.maze.shape[0]) or \
                              (col == -1) or (col == self.maze.shape[1]) or \
@@ -110,24 +121,17 @@ class Maze:
 
             :return tuple next_cell: Position (x,y) on the maze that agent transitions to.
         """
-        #minotaur can stand still
-        #action = random.randint(0, 4)
 
-        #minotaur cant stand still
         action = random.randint(1, 4)
 
         # Compute the future position given current (state, action)
-        debug_states = self.states
-        debug_states_states = self.states[state]
-        debug_minotaur_action = self.actions_minotaur
-       # print(action)
-       # print(self.actions_minotaur[action][0])
-       # print(self.actions_minotaur[action][1])
-        #print(self.actions_minotaur[4])
-        #print(action)
-        #print(self.actions_minotaur[5])
-        row = self.states[state][2] + self.actions_minotaur[action][0]
-        col = self.states[state][3] + self.actions_minotaur[action][1]
+        current_state_x = self.states[state][2]
+        current_state_y = self.states[state][3]
+        action_x = self.actions[action][0]
+        action_y = self.actions[action][1]
+        row = current_state_x + action_x
+        col = current_state_y + action_y
+
         # Is the future position an impossible one ?
         hitting_maze_walls = (row == -1) or (row == 7) or \
                              (col == -1) or (col == 8)
@@ -151,7 +155,33 @@ class Maze:
         for s in range(self.n_states):
             for a in range(self.n_actions):
                 next_s = self.__move(s, a)
-                transition_probabilities[next_s, s, a] = 1
+
+                # minotaur moves
+                minotaur_x = self.states[next_s][2]
+                minotaur_y = self.states[next_s][3]
+                possible_states = []
+                for action in range(1, 5):
+                    action_x = self.actions[action][0]
+                    action_y = self.actions[action][1]
+                    row = minotaur_x + action_x
+                    col = minotaur_y + action_y
+
+                    # Is the future position an impossible one ?
+                    hitting_maze_walls = (row == -1) or (row == 7) or \
+                                         (col == -1) or (col == 8)
+                    # Based on the impossiblity check return the next state.
+                    if hitting_maze_walls:
+                        # next_s <- s
+                        possible_states.append(s)
+                    else:
+                        # next_s <- self.map[(self.states[state][0], self.states[state][1], row, col)]
+                        possible_states.append(self.map[(self.states[next_s][0], self.states[next_s][1], row, col)])
+
+                len_possible_minotaur_next_state = possible_states.__len__()
+                probability = 1/len_possible_minotaur_next_state
+                for possible_minotaur_next_state in possible_states:
+                    transition_probabilities[possible_minotaur_next_state, s, a] += probability
+
         return transition_probabilities
 
     def __rewards(self, weights=None, random_rewards=None):
@@ -159,35 +189,25 @@ class Maze:
         rewards = np.zeros((self.n_states, self.n_actions))
 
         # If the rewards are not described by a weight matrix
-        if weights is None:
-            for s in range(self.n_states):
-                for a in range(self.n_actions):
-                    next_s = self.__move(s, a)
-                    # Rewrd for hitting a wall
-                    if s == next_s and a != self.STAY:
-                        rewards[s, a] = self.IMPOSSIBLE_REWARD
-                    # Reward for reaching the exit
-                    elif s == next_s and self.maze[self.states[next_s][0:2]] == 2:
-                        rewards[s, a] = self.GOAL_REWARD
-                    # Reward for taking a step to an empty cell that is not the exit
-                    elif self.states[s][0] == self.states[s][2] and \
-                            self.states[s][1] == self.states[s][3]:
-                        rewards[s, a] = self.EATEN_REWARD
-                    else:
-                        rewards[s, a] = self.STEP_REWARD
+        for s in range(self.n_states):
+            for a in range(self.n_actions):
+                next_s = self.__move(s, a)
 
-        # If the weights are descrobed by a weight matrix
-        else:
-            for s in range(self.n_states):
-                for a in range(self.n_actions):
-                    next_s = self.__move(s, a)
-                    i, j = self.states[next_s]
-                    # Simply put the reward as the weights o the next state.
-                    rewards[s, a] = weights[i][j]
+                # Reward for taking a step to an empty cell that is not the exit
+                if self.states[next_s][0] == self.states[next_s][2] and self.states[next_s][1] == self.states[next_s][3]:
+                    rewards[s, a] = self.EATEN_REWARD
+                # Rewrd for hitting a wall
+                elif s == next_s and a != self.STAY:
+                    rewards[s, a] = self.IMPOSSIBLE_REWARD
+                # Reward for reaching the exit
+                elif s == next_s and self.maze[self.states[next_s][0:2]] == 2:
+                    rewards[s, a] = self.GOAL_REWARD
+                else:
+                    rewards[s, a] = self.STEP_REWARD
 
         return rewards
 
-    def simulate(self, start, policy, method):
+    def simulate(self, start, policy, actual_time_horizon, method):
         if method not in methods:
             error = 'ERROR: the argument method must be in {}'.format(methods)
             raise NameError(error)
@@ -195,33 +215,38 @@ class Maze:
         path = list()
         if method == 'DynProg':
             # Deduce the horizon from the policy shape
-            horizon = policy.shape[1]
+            training_time_horizon = policy.shape[1]
+            actual_time_horizon = actual_time_horizon
+            # handle extra time step
+            diff = actual_time_horizon - training_time_horizon
+
             # Initialize current state and time
             t = 0
             s = self.map[start]
             # Add the starting position in the maze to the path
             path.append(start)
-            while t < horizon - 1:
+            while t < training_time_horizon + diff - 1:
+
+
+
+                # continues as normal
+
                 # Move to next state given the policy and the current state
                 s = self.__move_minotaur(s)
-
-                if self.states[s][0] == self.states[s][2] and self.states[s][1] == self.states[s][3]:
-                    print("Eaten!")
-                    return path
-
                 next_s = self.__move(s, policy[s, t])
                 # Add the position in the maze corresponding to the next state
                 # to the path
                 path.append(self.states[next_s])
-
-                if self.states[next_s][0] == self.states[next_s][2] and self.states[next_s][1] == self.states[next_s][3]:
-                    print("Eaten!")
-                    return path
                 # Update time and state for next iteration
                 t += 1
                 s = next_s
-                if t == (horizon-1) and self.states[s][0:2] != (6, 5):
-                    print('Out of time')
+
+
+                # handle extra time step
+                if diff > 0:
+                    t = 0
+                diff -= 1
+
         if method == 'ValIter':
             # Initialize current state, next state and time
             t = 1
@@ -297,11 +322,28 @@ def dynamic_programming(env, horizon):
             for a in range(n_actions):
                 # Update of the temporary Q values
                 Q[s, a] = r[s, a] + np.dot(p[:, s, a], V[:, t + 1])
+                # if Q[0, 0] != -100:
+                #     print("now")
         # Update by taking the maximum Q value w.r.t the action a
+        # if t == 5:
+        #     print("time")
         V[:, t] = np.max(Q, 1)
         # The optimal action is the one that maximizes the Q function
         policy[:, t] = np.argmax(Q, 1)
-    return V, policy
+
+
+    # # The dynamic programming bakwards recursion
+    # for t in range(T - 1, -1, -1):
+    #     # Update the value function acccording to the bellman equation
+    #     for s in range(n_states):
+    #         for a in range(n_actions):
+    #             # Update of the temporary Q values
+    #             Q[s, a] = Q[s, a] + 0.1 * (np.dot(p[:, s, a], V[:, t + 1]) - Q[s, a])
+    #     # Update by taking the maximum Q value w.r.t the action a
+    #     V[:, t] = np.max(Q, 1)
+    #     # The optimal action is the one that maximizes the Q function
+    #     policy[:, t] = np.argmax(Q, 1)
+    return Q, V, policy
 
 
 def value_iteration(env, gamma, epsilon):
